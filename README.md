@@ -41,7 +41,7 @@ celeba_or_celebahq
 In our paper, we use fisrt 3000 as test set and remaining 27000 for training.
 Carefully check the fisrt few (always two) lines in the label file which is not like the others.
 ```
-python proprecessors/celeba-hq.py --img_path $your_image_path --label_path $your_image_path $your_label_path --target_path datasets --start 3002 --end 30002
+python proprecessors/celeba-hq.py --img_path $your_image_path --label_path $your_label_path --target_path datasets --start 3002 --end 30002
 ```
 Then you will get several ".txt" files in the "datasets/", each of them consists of lines of the absolute path of image and its tag-irrelevant conditions (Age and Gender by default).
 
@@ -79,7 +79,7 @@ python proprecessors/custom.py --imgs $your_training_set --target_path datasets/
 ```
 For other datasets, please code your preprocessor by yourself.
 
-Here, we provide some links for you to download other avilable datasets:
+Here, we provide some links for you to download other available datasets:
 - Face
   - **[CelebA](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)**
   - **[FFHQ-aging](https://github.com/VEDANTGHODKE/FFHQ-Ageing-Dataset)**
@@ -130,11 +130,13 @@ The code is released for academic research use only. For other use, please conta
 
 If our paper helps your research, please cite it in your publications:
 ```
-@article{li2021,
-  title={Attribute Guided Unpaired Image-to-Image Translation with Semi-supervised Learning},
-  author={Li, Xinyang and Hu, Jie and Zhang, Shengchuan and Hong, Xiaopeng and Ye, Qixiang and Wu, Chenglin and Ji, Rongrong},
-  journal={arXiv preprint arXiv:1904.12428},
-  year={2019}
+@misc{li2021imagetoimage,
+      title={Image-to-image Translation via Hierarchical Style Disentanglement}, 
+      author={Xinyang Li and Shengchuan Zhang and Jie Hu and Liujuan Cao and Xiaopeng Hong and Xudong Mao and Feiyue Huang and Yongjian Wu and Rongrong Ji},
+      year={2021},
+      eprint={2103.01456},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
 }
 ```
 
