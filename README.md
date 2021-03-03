@@ -114,7 +114,7 @@ python core/train.py --config configs/celeba-hq.yaml --gpus 0
 ```
 
 The samples and checkpoints are in the "outputs/" dir.
-For Celeba-hq dataset, the samples during first 20k iterations will be like:
+For Celeba-hq dataset, the samples during first 200k iterations will be like:
 
 ![training](assets/training.gif)
 
