@@ -106,7 +106,7 @@ Here, we provide some links for you to download other available datasets:
 Dataset in **Bold** means we have tested the generalization of HiSD for this dataset.
 
 ### Train.
-Following "/core/configs/celeba-hq.yaml" to make the config file fit your machine and dataset.
+Following "configs/celeba-hq.yaml" to make the config file fit your machine and dataset.
 
 For a single 1080Ti and CelebA-HQ, you can directly run:
 ```
