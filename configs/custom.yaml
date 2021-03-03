@@ -1,0 +1,67 @@
+# Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
+# Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
+
+# logger options
+image_save_iter: 1000         # How often do you want to save output images during training
+snapshot_save_iter: 10000     # How often do you want to save trained models
+log_iter: 10                  # How often do you want to log the training stats
+
+# optimization options
+total_iterations: 600000             # maximum number of training iterations
+batch_size: 8            # batch size
+num_workers: 1 
+weight_decay: 0          # weight decay
+beta1: 0                    # Adam parameter
+beta2: 0.99                  # Adam parameter
+init: kaiming                 # initialization [gaussian/kaiming/xavier/orthogonal]
+lr_dis: 0.0001                # initial learning rate
+lr_gen_mappers: 0.000001                # initial learning rate
+lr_gen_others: 0.0001
+adv_w: 1  
+sty_w: 1                  
+rec_w: 1   
+
+style_dim: 256
+noise_dim: 32
+
+
+discriminators:
+  # No normalization (Attribute-specific)
+  channels: [64, 128, 256, 512, 1024, 2048]
+extractors:
+  # No normalization (Tag-specific)
+  channels: [64, 128, 256, 512, 1024, 2048]
+encoder:
+  # Instance Normalization (Shared)
+  channels: [64, 128, 256]
+translators:
+  # Adaptive Instance Normalization (Tag-specific)
+  channels: [64, 64, 64, 64, 64, 64, 64, 64]
+decoder:
+   # Instance Normalization (Shared)
+  channels: [256, 128, 64]
+mappers: 
+  # No normalization (Attribute-specific)
+  # Last num of pre_channels should be equal to the first num of post_channels
+  pre_channels: [256, 256, 256]
+  post_channels: [256, 256, 256]
+    
+tags:
+  -
+    name: Tag1
+    tag_irrelevant_conditions_dim: 1
+    # we use 1 dim tag_irrelevant_conditions by default (but all are zeros).
+    attributes: 
+      -
+        name: 'attribute1'
+        filename: ../dataset/train/Bangs_with.txt
+      -
+        name: 'without'
+        filename: ../dataset/train/Bangs_without.txt
+        
+# data options
+input_dim: 3                  # number of image channels
+new_size: 128                 # first resize the shortest image side to this size
+crop_image_height: 128        # random crop image of this height
+crop_image_width: 128        # random crop image of this width
+
