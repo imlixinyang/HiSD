@@ -6,6 +6,8 @@ Official pytorch implementation of paper "[Image-to-image Translation via Hierar
 
 ![fig](assets/fig.png)
 
+HiSD is the SOTA image-to-image translation method for both **Scalability** for multiple labels and **controllable diversity** with impressive disentanglement.
+
 ## Quick Start
 
 ### Clone this repo:
@@ -63,21 +65,22 @@ your_training_set
 For example, the AFHQ (one tag and three attributes, remember to split the training and test set first):
 ```
 AFHQ_training
-  - cat
-    - img0
-    - img1
-    - ...
-  - dog
-    - ...
-  - wild
-    - ...
+  - Category
+    - cat
+      - img0
+      - img1
+      - ...
+    - dog
+      - ...
+    - wild
+      - ...
 ```
 
 You can Run
 ```
 python proprecessors/custom.py --imgs $your_training_set --target_path datasets/custom.txt
 ```
-For other datasets, please code your preprocessor by yourself.
+For other datasets, please code the preprocessor by yourself.
 
 Here, we provide some links for you to download other available datasets:
 - Face
