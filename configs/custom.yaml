@@ -54,10 +54,10 @@ tags:
     attributes: 
       -
         name: 'attribute1'
-        filename: ../dataset/train/Bangs_with.txt
+        filename: ../dataset/train/Tag1_attribute1.txt
       -
-        name: 'without'
-        filename: ../dataset/train/Bangs_without.txt
+        name: 'attribute2'
+        filename: ../dataset/train/Tag1_attribute2.txt
         
 # data options
 input_dim: 3                  # number of image channels
