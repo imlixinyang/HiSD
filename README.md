@@ -16,7 +16,7 @@ Also, the styles can be smoothly interpolated like:
 
 All tranlsations are producted be a unified HiSD model and trained end-to-end.
 
-## Easy Use (Jupyter Notebook, Colab is recommended.)
+## Easy Use (for Both Jupyter Notebook and Python Script)
 
 Download the pretrained checkpoint in [Baidu Drive](https://pan.baidu.com/s/1DuPMszuyIwkfRVQN8sbOkw) (Password:ihxf) or [Google Drive](https://drive.google.com/file/d/1LzrJmpb-E3Fxo80kBlHDsUpcon7DaF1X/view?usp=sharing). Then put it into the root of this repo.
 
