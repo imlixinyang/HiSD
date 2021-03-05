@@ -61,6 +61,7 @@ with torch.no_grad():
     for input in inputs:
         x = transform(Image.open(input).convert('RGB')).unsqueeze(0).cuda()
         c = E(x)
+        c_trg = c
         for j in range(len(steps)):
             step = steps[j]
             if step['type'] == 'latent-guided':
@@ -74,7 +75,8 @@ with torch.no_grad():
             elif step['type'] == 'reference-guided':
                 reference = transform(Image.open(step['reference']).convert('RGB')).unsqueeze(0).cuda()
                 s_trg = F(reference, step['tag'])
-                c_trg = T(c_, s_, step['tag'])
+            
+            c_trg = T(c, s_trg, step['tag'])
             
         x_trg = G(c_trg)
         vutils.save_image(((x_trg + 1)/ 2).data, os.path.join(opts.output_path, f'{os.path.basename(input)}_output_{i}.jpg'), padding=0)
