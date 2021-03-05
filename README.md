@@ -151,13 +151,11 @@ The code is released for academic research use only. For other use, please conta
 
 If our paper helps your research, please cite it in your publications:
 ```
-@misc{li2021imagetoimage,
+@article{li2021imagetoimage,
       title={Image-to-image Translation via Hierarchical Style Disentanglement}, 
       author={Xinyang Li and Shengchuan Zhang and Jie Hu and Liujuan Cao and Xiaopeng Hong and Xudong Mao and Feiyue Huang and Yongjian Wu and Rongrong Ji},
-      year={2021},
-      eprint={2103.01456},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+      journal={arXiv preprint arXiv:2011.13084},
+      year={2020}
 }
 ```
 
