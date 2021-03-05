@@ -7,7 +7,7 @@ snapshot_save_iter: 10000     # How often do you want to save trained models
 log_iter: 10                  # How often do you want to log the training stats
 
 # optimization options
-total_iterations: 600000
+total_iterations: 200000
 batch_size: 8                
 num_workers: 1 
 weight_decay: 0         

@@ -18,7 +18,7 @@ All tranlsations are producted be a unified HiSD model and trained end-to-end.
 
 ## Easy Use (for Both Jupyter Notebook and Python Script)
 
-Download the pretrained checkpoint in [Baidu Drive](https://pan.baidu.com/s/1DuPMszuyIwkfRVQN8sbOkw) (Password:ihxf) or [Google Drive](https://drive.google.com/file/d/1LzrJmpb-E3Fxo80kBlHDsUpcon7DaF1X/view?usp=sharing). Then put it into the root of this repo.
+Download the pretrained checkpoint in [Baidu Drive](https://pan.baidu.com/s/1RDadAfRVCPz6ztK6f1MEMQ) (Password:kjr5) or [Google Drive](https://drive.google.com/file/d/1K5DYTHTVjXLBIeexJtz89Y-4pKynvMmE/view?usp=sharing). Then put it into the root of this repo.
 
 Open "easy_use.ipynb" and you can manipolate the facial attributes by yourself!
 

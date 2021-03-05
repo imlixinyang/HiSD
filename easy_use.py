@@ -1,6 +1,6 @@
 # import packages
-from core/utils import get_config
-from core/trainer import HiSD_Trainer
+from core.utils import get_config
+from core.trainer import HiSD_Trainer
 import argparse
 import torchvision.utils as vutils
 import sys
@@ -11,14 +11,18 @@ from PIL import Image
 import numpy as np
 import time
 
+# device = 'cuda:0' 
+device = 'cpu'
+
 # load checkpoint
 noise_dim = 32
 image_size = 128
+config = get_config('configs/celeba-hq.yaml')
 checkpoint = 'checkpoint_128_celeba-hq.pt'
 trainer = HiSD_Trainer(config)
-state_dict = torch.load(opts.checkpoint)
+state_dict = torch.load(checkpoint)
 trainer.models.gen.load_state_dict(state_dict['gen_test'])
-trainer.models.gen.cuda()
+trainer.models.gen.to(device)
 
 E = trainer.models.gen.encode
 T = trainer.models.gen.translate
@@ -48,8 +52,9 @@ input = 'examples/input_0.jpg'
 Do the translation and save the output.
 """
 with torch.no_grad():
-    x = transform(Image.open(input).convert('RGB')).unsqueeze(0).cuda()
+    x = transform(Image.open(input).convert('RGB')).unsqueeze(0).to(device)
     c = E(x)
+    c_trg = c
     for j in range(len(steps)):
         step = steps[j]
         if step['type'] == 'latent-guided':
@@ -57,13 +62,14 @@ with torch.no_grad():
                 torch.manual_seed(step['seed'])
                 torch.cuda.manual_seed(step['seed']) 
 
-            z = torch.randn(1, noise_dim).cuda()
+            z = torch.randn(1, noise_dim).to(device)
             s_trg = M(z, step['tag'], step['attribute'])
 
         elif step['type'] == 'reference-guided':
-            reference = transform(Image.open(step['reference']).convert('RGB')).unsqueeze(0).cuda()
+            reference = transform(Image.open(step['reference']).convert('RGB')).unsqueeze(0).to(device)
             s_trg = F(reference, step['tag'])
-            c_trg = T(c_, s_, step['tag'])
+        
+        c_trg = T(c_trg, s_trg, step['tag'])
             
     x_trg = G(c_trg)
 vutils.save_image(((x_trg + 1)/ 2).data, 'examples/output.jpg', padding=0)
