@@ -65,7 +65,7 @@ python proprecessors/celeba-hq.py --img_path $your_image_path --label_path $your
 ```
 Then you will get several ".txt" files in the "datasets/", each of them consists of lines of the absolute path of image and its tag-irrelevant conditions (Age and Gender by default).
 
-Almost all custom datasets can be converted into special cases of HiSD.
+Allmost all custom datasets can be converted into special cases of HiSD.
 We provide a script for custom datasets.
 You need to organize the folder like:
 ```
