@@ -1,8 +1,6 @@
 from torch import nn
-from torch.autograd import Variable
 import torch
 import torch.nn.functional as F
-import torchvision.models as models
 
 try:
     from itertools import izip as zip
