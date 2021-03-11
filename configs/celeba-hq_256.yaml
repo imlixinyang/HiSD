@@ -1,0 +1,90 @@
+# Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
+# Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
+
+# logger options
+image_save_iter: 1000         # How often do you want to save output images during training
+snapshot_save_iter: 10000     # How often do you want to save trained models
+log_iter: 10                  # How often do you want to log the training stats
+
+# optimization options
+total_iterations: 600000
+batch_size: 8                
+num_workers: 1 
+weight_decay: 0         
+beta1: 0
+beta2: 0.99
+init: kaiming
+lr_dis: 0.0001
+lr_gen_mappers: 0.000001
+lr_gen_others: 0.0001
+
+# 
+adv_w: 1  
+sty_w: 1                  
+rec_w: 1   
+
+style_dim: 256
+noise_dim: 32
+
+discriminators:
+  # No normalization (Attribute-specific)
+  channels: [32, 64, 128, 256, 512, 512, 512]
+extractors:
+  # No normalization (Tag-specific)
+  channels: [32, 64, 128, 256, 512, 512, 512]
+encoder:
+  # Instance Normalization (Shared)
+  channels: [64, 128, 256]
+translators:
+  # Adaptive Instance Normalization (Tag-specific)
+  channels: [64, 64, 64, 64, 64, 64, 64, 64]
+decoder:
+   # Instance Normalization (Shared)
+  channels: [256, 128, 64]
+mappers: 
+  # No normalization (Attribute-specific)
+  # Last num of pre_channels should be equal to the first num of post_channels
+  pre_channels: [256, 256, 256]
+  post_channels: [256, 256, 256]
+    
+tags:
+  -
+    name: Bangs
+    tag_irrelevant_conditions_dim: 2
+    attributes: 
+      -
+        name: 'with'
+        filename: datasets/Bangs_with.txt
+      -
+        name: 'without'
+        filename: datasets/Bangs_without.txt
+  -
+    name: Eyeglasses
+    tag_irrelevant_conditions_dim: 2
+    attributes: 
+      -
+        name: 'with'
+        filename: datasets/Eyeglasses_with.txt
+      -
+        name: 'without'
+        filename: datasets/Eyeglasses_without.txt
+  -
+    name: HairColor
+    tag_irrelevant_conditions_dim: 2
+    attributes: 
+      -
+        name: 'black'
+        filename: datasets/HairColor_black.txt
+      -
+        name: 'blond'
+        filename: datasets/HairColor_blond.txt
+      -
+        name: 'brown'
+        filename: datasets/HairColor_brown.txt
+        
+# data options
+input_dim: 3                  # number of image channels
+new_size: 256                 # first resize the shortest image side to this size
+crop_image_height: 256        # random crop image of this height
+crop_image_width: 256         # random crop image of this width
+

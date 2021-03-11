@@ -11,14 +11,15 @@ from PIL import Image
 import numpy as np
 import time
 
+# use cpu by default
 # device = 'cuda:0' 
 device = 'cpu'
 
 # load checkpoint
-noise_dim = 32
-image_size = 128
-config = get_config('configs/celeba-hq.yaml')
-checkpoint = 'checkpoint_128_celeba-hq.pt'
+config = get_config('configs/celeba-hq_256.yaml')
+noise_dim = config['noise_dim']
+image_size = config['image_size']
+checkpoint = 'checkpoint_256_celeba-hq.pt'
 trainer = HiSD_Trainer(config)
 state_dict = torch.load(checkpoint)
 trainer.models.gen.load_state_dict(state_dict['gen_test'])
@@ -31,8 +32,9 @@ M = trainer.models.gen.map
 F = trainer.models.gen.extract
 
 transform = transforms.Compose([transforms.Resize(image_size),
-                                    transforms.ToTensor(),
-                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+                                transforms.ToTensor(),
+                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
 
 """
 DIY your translation steps.
