@@ -18,7 +18,7 @@ device = 'cpu'
 # load checkpoint
 config = get_config('configs/celeba-hq_256.yaml')
 noise_dim = config['noise_dim']
-image_size = config['image_size']
+image_size = config['new_size']
 checkpoint = 'checkpoint_256_celeba-hq.pt'
 trainer = HiSD_Trainer(config)
 state_dict = torch.load(checkpoint)
