@@ -18,7 +18,7 @@ All tranlsations are producted be a unified HiSD model and trained end-to-end.
 
 **!News:**
 
-[2021.3.11]: High-resolution (256x256) config and checkpoint released.**
+**[2021.3.11]: High-resolution (256x256) config and checkpoint released.**
 
 ## Easy Use (for Both Jupyter Notebook and Python Script)
 
