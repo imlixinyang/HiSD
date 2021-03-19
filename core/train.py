@@ -38,11 +38,11 @@ trainer = HiSD_Trainer(config, multi_gpus=multi_gpus)
 iterations = trainer.resume(checkpoint_directory, hyperparameters=config) if opts.resume else 0
 
 if multi_gpus:
-    trainer.cuda()
+    trainer.cuda(int(opts.gpus[0]))
     print("Using GPUs: %s" % str(opts.gpus))
     trainer.models= torch.nn.DataParallel(trainer.models, device_ids=[int(gpu) for gpu in opts.gpus])
 else:
-    trainer.cuda()
+    trainer.cuda(int(opts.gpus[0]))
 
 # Setup data loader
 train_iters = get_data_iters(config)
@@ -73,7 +73,9 @@ while True:
             train_iters[i][j_trg].preload()
 
             test_image_outputs = trainer.sample(x, x_trg, j, j_trg, i)
-            write_2images(test_image_outputs, config['batch_size'], image_directory, 'sample_%08d_%2d' % (iterations + 1, i))
+            write_2images(test_image_outputs,
+                          config['batch_size'], 
+                          image_directory, 'sample_%08d_%s_%s_to_%s' % (iterations + 1, config['tags'][i]['name'], config['tags'][i]['attributes'][j]['name'], config['tags'][i]['attributes'][j_trg]['name']))
     
     torch.cuda.synchronize()
 
