@@ -16,7 +16,7 @@ import numpy as np
 import torch.nn.init as init
 import time
 
-def get_data_iters(conf):
+def get_data_iters(conf, gpus):
     batch_size = conf['batch_size']
     new_size = conf['new_size']
     height = conf['crop_image_height']
@@ -38,7 +38,7 @@ def get_data_iters(conf):
         batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
                             for j in range(len(tags[i]['attributes']))] for i in range(len(tags))]
 
-    iters = [[data_prefetcher(loader, batch_size) for loader in loaders] for loaders in loaders]
+    iters = [[data_prefetcher(loader, batch_size, gpus) for loader in loaders] for loaders in loaders]
 
     return iters
 
@@ -114,11 +114,12 @@ def weights_init(init_type='gaussian'):
     return init_fun
 
 class data_prefetcher():
-    def __init__(self, loader, batch_size):
+    def __init__(self, loader, batch_size, gpus):
         self.loader = loader
         self.iter = iter(self.loader)
         self.stream = torch.cuda.Stream()
         self.batch_size = batch_size
+        self.gpu0 = int(gpus[0])
 
         self.preload()
 
@@ -134,7 +135,7 @@ class data_prefetcher():
             self.x, self.y = next(self.iter)
         
         with torch.cuda.stream(self.stream):
-            self.x, self.y = self.x.cuda(non_blocking=True), self.y.cuda(non_blocking=True)
+            self.x, self.y = self.x.cuda(self.gpu0, non_blocking=True), self.y.cuda(self.gpu0, non_blocking=True)
 
     def next(self):
         return self.x, self.y

@@ -45,7 +45,7 @@ else:
     trainer.cuda(int(opts.gpus[0]))
 
 # Setup data loader
-train_iters = get_data_iters(config)
+train_iters = get_data_iters(config, opts.gpus)
 tags = list(range(len(train_iters)))
 
 import time
