@@ -145,7 +145,7 @@ Default 'steps' make every image to be with bangs and glasses using random laten
 
 ### Evaluation metrics.
 
-We use [FID](https://github.com/mseitzer/pytorch-fid) for quantitative comparison. For more details, please refer to the paper.
+We use [FID](https://github.com/clovaai/stargan-v2/blob/master/metrics/fid.py) of StarGANv2 for quantitative comparison. For more details, please refer to the paper.
 
 ## License
 
