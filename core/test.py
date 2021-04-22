@@ -32,7 +32,7 @@ parser.add_argument('--output_path', type=str)
 
 opts = parser.parse_args()
 
-os.makedirs(opts.output_dir, exist_ok=True)
+os.makedirs(opts.output_path, exist_ok=True)
 
 config = get_config(opts.config)
 noise_dim = config['noise_dim']
@@ -79,5 +79,5 @@ with torch.no_grad():
             c_trg = T(c, s_trg, step['tag'])
             
         x_trg = G(c_trg)
-        vutils.save_image(((x_trg + 1)/ 2).data, os.path.join(opts.output_path, f'{os.path.basename(input)}_output_{i}.jpg'), padding=0)
+        vutils.save_image(((x_trg + 1)/ 2).data, os.path.join(opts.output_path, f'{os.path.basename(input)}_output.jpg'), padding=0)
 
