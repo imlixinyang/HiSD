@@ -76,7 +76,7 @@ with torch.no_grad():
                 reference = transform(Image.open(step['reference']).convert('RGB')).unsqueeze(0).cuda()
                 s_trg = F(reference, step['tag'])
             
-            c_trg = T(c, s_trg, step['tag'])
+            c_trg = T(c_trg, s_trg, step['tag'])
             
         x_trg = G(c_trg)
         vutils.save_image(((x_trg + 1)/ 2).data, os.path.join(opts.output_path, f'{os.path.basename(input)}_output.jpg'), padding=0)
