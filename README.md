@@ -157,11 +157,13 @@ The code is released for academic research use only. For other use, please conta
 
 If our paper helps your research, please cite it in your publications:
 ```
-@article{li2021imagetoimage,
-      title={Image-to-image Translation via Hierarchical Style Disentanglement}, 
-      author={Xinyang Li and Shengchuan Zhang and Jie Hu and Liujuan Cao and Xiaopeng Hong and Xudong Mao and Feiyue Huang and Yongjian Wu and Rongrong Ji},
-      journal={arXiv preprint arXiv:2011.13084},
-      year={2020}
+@InProceedings{Li_2021_CVPR,
+    author    = {Li, Xinyang and Zhang, Shengchuan and Hu, Jie and Cao, Liujuan and Hong, Xiaopeng and Mao, Xudong and Huang, Feiyue and Wu, Yongjian and Ji, Rongrong},
+    title     = {Image-to-Image Translation via Hierarchical Style Disentanglement},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2021},
+    pages     = {8639-8648}
 }
 ```
 
