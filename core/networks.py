@@ -103,12 +103,12 @@ class Gen(nn.Module):
         channels = hyperparameters['encoder']['channels']
         self.encoder = nn.Sequential(
             nn.Conv2d(hyperparameters['input_dim'], channels[0], 1, 1, 0),
-            *[DownBlockIN(channels[i], channels[i + 1]) for i in range(len(channels) - 1)]
+            *[EncoderBlock(channels[i], channels[i + 1]) for i in range(len(channels) - 1)]
         )    
 
         channels = hyperparameters['decoder']['channels']
         self.decoder = nn.Sequential(
-            *[UpBlockIN(channels[i], channels[i + 1]) for i in range(len(channels) - 1)],
+            *[GeneratorBlock(channels[i], channels[i + 1]) for i in range(len(channels) - 1)],
             nn.Conv2d(channels[-1], hyperparameters['input_dim'], 1, 1, 0)
         )   
 
@@ -151,7 +151,7 @@ class Extractors(nn.Module):
         channels = hyperparameters['extractors']['channels']
         self.model = nn.Sequential(
             nn.Conv2d(hyperparameters['input_dim'], channels[0], 1, 1, 0),
-            *[DownBlock(channels[i], channels[i + 1]) for i in range(len(channels) - 1)],
+            *[DiscriminatorBlock(channels[i], channels[i + 1]) for i in range(len(channels) - 1)],
             nn.AdaptiveAvgPool2d(1),
             nn.Conv2d(channels[-1],  hyperparameters['style_dim'] * self.num_tags, 1, 1, 0),
         )
@@ -165,47 +165,26 @@ class Translator(nn.Module):
         super().__init__()
         channels = hyperparameters['translators']['channels']
         self.model = nn.Sequential( 
-            nn.Conv2d(hyperparameters['encoder']['channels'][-1], channels[0], 1, 1, 0),
-            *[MiddleBlock(channels[i], channels[i + 1]) for i in range(len(channels) - 1)]
+            Conv2d(hyperparameters['encoder']['channels'][-1], channels[0], 1, 1, 0),
+            *[TranslatorBlock(channels[i], channels[i + 1], hyperparameters['style_dim']) for i in range(len(channels) - 1)]
         )
-
-        self.style_to_params = nn.Linear(hyperparameters['style_dim'], self.get_num_adain_params(self.model))
         
         self.features = nn.Sequential(
-            nn.Conv2d(channels[-1], hyperparameters['decoder']['channels'][0], 1, 1, 0),
+            Conv2d(channels[-1], hyperparameters['decoder']['channels'][0], 1, 1, 0, style_dim=hyperparameters['style_dim']),
         ) 
 
         self.masks = nn.Sequential(
-            nn.Conv2d(channels[-1], hyperparameters['decoder']['channels'][0], 1, 1, 0),
+            Conv2d(channels[-1], hyperparameters['decoder']['channels'][0], 1, 1, 0, style_dim=hyperparameters['style_dim']),
+            
             nn.Sigmoid()
         ) 
     
     def forward(self, e, s):
-        p = self.style_to_params(s)
-        self.assign_adain_params(p, self.model)
-
         mid = self.model(e)
         f = self.features(mid)
         m = self.masks(mid) 
 
         return f * m + e * (1 - m)
-
-    def assign_adain_params(self, adain_params, model):
-        # assign the adain_params to the AdaIN layers in model
-        for m in model.modules():
-            if m.__class__.__name__ in ["AdaptiveInstanceNorm2d"]:
-                m.bias = adain_params[:, :m.num_features].contiguous().view(-1, m.num_features, 1)
-                m.weight = adain_params[:, m.num_features:2 * m.num_features].contiguous().view(-1, m.num_features, 1) + 1
-                if adain_params.size(1) > 2 * m.num_features:
-                    adain_params = adain_params[:, 2 * m.num_features:]
-
-    def get_num_adain_params(self, model):
-        # return the number of AdaIN parameters needed by the model
-        num_adain_params = 0
-        for m in model.modules():
-            if m.__class__.__name__ in ["AdaptiveInstanceNorm2d"]:
-                num_adain_params += 2 * m.num_features
-        return num_adain_params
 
 
 class Mapper(nn.Module):
@@ -213,14 +192,14 @@ class Mapper(nn.Module):
         super().__init__()
         channels = hyperparameters['mappers']['pre_channels']
         self.pre_model = nn.Sequential(
-            nn.Linear(hyperparameters['noise_dim'], channels[0]),
-            *[LinearBlock(channels[i], channels[i + 1]) for i in range(len(channels) - 1)]
+            MapperBlock(hyperparameters['noise_dim'], channels[0]),
+            *[MapperBlock(channels[i], channels[i + 1]) for i in range(len(channels) - 1)]
         )
 
         channels = hyperparameters['mappers']['post_channels']
         self.post_models = nn.ModuleList([nn.Sequential(
-            *[LinearBlock(channels[i], channels[i + 1]) for i in range(len(channels) - 1)],
-            nn.Linear(channels[-1], hyperparameters['style_dim']), 
+            *[MapperBlock(channels[i], channels[i + 1]) for i in range(len(channels) - 1)],
+            Linear(channels[-1], hyperparameters['style_dim']), 
             ) for i in range(num_attributes)
         ])
 
@@ -232,106 +211,90 @@ class Mapper(nn.Module):
 # Basic Blocks
 ##################################################################################
 
-class DownBlock(nn.Module):
+class DiscriminatorBlock(nn.Module):
     def __init__(self, in_dim, out_dim):
         super().__init__()
-
-        self.conv1 = nn.Conv2d(in_dim, in_dim, 3, 1, 1)
-        self.conv2 = nn.Conv2d(in_dim, out_dim, 3, 1, 1)
-
-        self.activ = nn.LeakyReLU(0.2, inplace=True)
-
-        self.sc = nn.Conv2d(in_dim, out_dim, 1, 1, 0, bias=False)
+        
+        self.model = Residual(
+            nn.Sequential(
+                Conv2d(in_dim, out_dim, demod=False, scale=math.sqrt(2/(1+0.2**2))),
+                nn.LeakyReLU(0.2, inplace=True),
+                nn.AvgPool2d(2),
+                Conv2d(in_dim, out_dim, demod=False, scale=math.sqrt(2/(1+0.2**2))),
+                nn.LeakyReLU(0.2, inplace=True),
+            ),
+            nn.Sequential(
+                nn.AvgPool2d(2),
+            )
+        )
 
     def forward(self, x):
-        residual = F.avg_pool2d(self.sc(x), 2)
-        out = self.conv2(self.activ(F.avg_pool2d(self.conv1(self.activ(x.clone())), 2)))
-        out = residual + out
-        return out / math.sqrt(2)
+        return self.model(x)
 
-class DownBlockIN(nn.Module):
+class EncoderBlock(nn.Module):
     def __init__(self, in_dim, out_dim):
         super().__init__()
-
-        self.conv1 = nn.Conv2d(in_dim, in_dim, 3, 1, 1)
-        self.conv2 = nn.Conv2d(in_dim, out_dim, 3, 1, 1)
-
-        # use nn.InstanceNorm2d(in_dim, affine=True) if you want.
-        self.in1 = InstanceNorm2d(in_dim)
-        self.in2 = InstanceNorm2d(in_dim)
-
-        self.activ = nn.LeakyReLU(0.2, inplace=True)
-
-        self.sc = nn.Conv2d(in_dim, out_dim, 1, 1, 0, bias=False)
+        
+        self.model = Residual(
+            nn.Sequential(
+                Conv2d(in_dim, in_dim, demod=True, scale=math.sqrt(2/(1+0.2**2))),
+                nn.LeakyReLU(0.2, inplace=True),
+                nn.AvgPool2d(2),
+                Conv2d(in_dim, out_dim, demod=True, scale=math.sqrt(2/(1+0.2**2))),
+                nn.LeakyReLU(0.2, inplace=True),
+            ),
+            nn.Sequential(
+                nn.AvgPool2d(2),
+            )
+        )
 
     def forward(self, x):
-        residual = F.avg_pool2d(self.sc(x), 2)
-        out = self.conv2(self.activ(self.in2(F.avg_pool2d(self.conv1(self.activ(self.in1(x.clone()))), 2))))
-        out = residual + out
-        return out / math.sqrt(2)
+        return self.model(x)
 
-class UpBlock(nn.Module):
-    def __init__(self, in_dim, out_dim):
+class TranslatorBlock(nn.Module):
+    def __init__(self, in_dim, out_dim, style_dim):
         super().__init__()
-
-        self.conv1 = nn.Conv2d(in_dim, out_dim, 3, 1, 1)
-        self.conv2 = nn.Conv2d(out_dim, out_dim, 3, 1, 1)
-
-        self.activ = nn.LeakyReLU(0.2, inplace=True)
-
-        self.sc = nn.Conv2d(in_dim, out_dim, 1, 1, 0, bias=False)
+        
+        self.model = Residual(
+            nn.Sequential(
+                Conv2d(in_dim, out_dim, style_dim=style_dim, demod=True, add_noise=True, scale=math.sqrt(2/(1+0.2**2))),
+                nn.LeakyReLU(0.2, inplace=True),
+                Conv2d(out_dim, out_dim, style_dim=style_dim, demod=True, add_noise=True, scale=math.sqrt(2/(1+0.2**2))),
+                nn.LeakyReLU(0.2, inplace=True),
+            ),
+            nn.Sequential(
+                nn.Identity()
+            )
+        )
 
     def forward(self, x):
-        residual = F.interpolate(self.sc(x), scale_factor=2, mode='nearest')
-        out = self.conv2(self.activ(self.conv1(F.interpolate(self.activ(x.clone()), scale_factor=2, mode='nearest'))))
-        out = residual + out
-        return out / math.sqrt(2)
+        return self.model(x)
 
-class UpBlockIN(nn.Module):
+class GeneratorBlock(nn.Module):
     def __init__(self, in_dim, out_dim):
         super().__init__()
-
-        self.conv1 = nn.Conv2d(in_dim, out_dim, 3, 1, 1)
-        self.conv2 = nn.Conv2d(out_dim, out_dim, 3, 1, 1)
-
-        self.in1 = InstanceNorm2d(in_dim)
-        self.in2 = InstanceNorm2d(out_dim)
-
-        self.activ = nn.LeakyReLU(0.2, inplace=True)
-
-        self.sc = nn.Conv2d(in_dim, out_dim, 1, 1, 0, bias=False)
+        
+        self.model = Residual(
+            nn.Sequential(
+                Conv2d(in_dim, out_dim, demod=True, scale=math.sqrt(2/(1+0.2**2))),
+                nn.LeakyReLU(0.2, inplace=True),
+                nn.Unsample2d(scale_factor=2, mode='bilinear'),
+                Conv2d(out_dim, out_dim, demod=True, scale=math.sqrt(2/(1+0.2**2))),
+                nn.LeakyReLU(0.2, inplace=True),
+            ),
+            nn.Sequential(
+                nn.Unsample2d(scale_factor=2, mode='bilinear'),
+            )
+        )
 
     def forward(self, x):
-        residual = F.interpolate(self.sc(x), scale_factor=2, mode='nearest')
-        out = self.conv2(self.activ(self.in2(self.conv1(F.interpolate(self.activ(self.in1(x.clone())), scale_factor=2, mode='nearest')))))
-        out = residual + out
-        return out / math.sqrt(2)
+        return self.model(x)
 
-class MiddleBlock(nn.Module):
+class MapperBlock(nn.Module):
     def __init__(self, in_dim, out_dim):
         super().__init__()
 
-        self.conv1 = nn.Conv2d(in_dim, out_dim, 3, 1, 1)
-        self.conv2 = nn.Conv2d(out_dim, out_dim, 3, 1, 1)
-
-        self.adain1 = AdaptiveInstanceNorm2d(in_dim)
-        self.adain2 = AdaptiveInstanceNorm2d(out_dim)
-
-        self.activ = nn.LeakyReLU(0.2, inplace=True)
-
-        self.sc = nn.Conv2d(in_dim, out_dim, 1, 1, 0, bias=False)
-
-    def forward(self, x):
-        residual = self.sc(x)
-        out = self.conv2(self.activ(self.adain2(self.conv1(self.activ(self.adain1(x.clone()))))))
-        out = residual + out
-        return out / math.sqrt(2)
-
-class LinearBlock(nn.Module):
-    def __init__(self, in_dim, out_dim):
-        super().__init__()
-
-        self.linear = nn.Linear(in_dim, out_dim)
+        self.linear = Linear(in_dim, out_dim, scale=math.sqrt(2))
         self.activ = nn.ReLU(inplace=True)
 
     def forward(self, x):
@@ -341,50 +304,92 @@ class LinearBlock(nn.Module):
 # Basic Modules and Functions
 ##################################################################################
 
-class AdaptiveInstanceNorm2d(nn.Module):
-    def __init__(self, num_features, eps=1e-5):
+class Residual(nn.Module):
+    def __init__(self, forward_model, skip_model, scale=1/math.sqrt(2)):
         super().__init__()
-        self.num_features = num_features
-        self.eps = eps
+        self.forward_model = forward_model
+        self.skip_model = skip_model
 
-        # weight and bias are dynamically assigned
-        self.bias = None
-        self.weight = None
+        self.scale = scale
 
     def forward(self, x):
-        assert self.bias is not None, "Please assign weight and bias before calling AdaIN!"
-        N, C, H, W = x.size()
-        x = x.view(N, C, -1)
-        bias_in = x.mean(-1, keepdim=True)
-        weight_in = x.std(-1, keepdim=True)
+        return (self.skip_model(x) + self.forward_model(x)) * self.scale
 
-        out = (x - bias_in) / (weight_in + self.eps) * self.weight + self.bias
-        return out.view(N, C, H, W)
 
-    def __repr__(self):
-        return self.__class__.__name__ + '(' + str(self.num_features) + ')'
-
-class InstanceNorm2d(nn.Module):
-    def __init__(self, num_features, eps=1e-5):
+class Conv2d(nn.Module):
+    def __init__(self, in_dim, out_dim, kernel_size=3, stride=1, padding=1,
+                 scale=1, style_dim=None, demod=False, add_noise=False, bias=True):
         super().__init__()
-        self.num_features = num_features
-        self.eps = eps
 
-        # weight and bias are dynamically assigned
-        self.weight = nn.Parameter(torch.ones(1, num_features, 1))
-        self.bias = nn.Parameter(torch.zeros(1, num_features, 1))
+        self.weight = nn.Parameter(torch.randn(out_dim, in_dim, kernel_size, kernel_size) / math.sqrt(in_dim * kernel_size * kernel_size))
+        self.bias = nn.Parameter(torch.zeros(out_dim)) if bias else None
+
+        self.stride = stride
+        self.padding= padding
+        self.scale = scale
+        self.demod = demod
+        self.eps = 1e-8
+
+        if style_dim is not None:
+            self.mod = True
+            self.style = None
+            self.style_to_mod = nn.Linear(style_dim, in_dim)
+        else:
+            self.mod = False
+
+        if add_noise:
+            self.noise_weight = nn.Parameter(torch.zeros(out_dim)) 
+        else:
+            self.noise_weight = None
 
     def forward(self, x):
-        N, C, H, W = x.size()
-        x = x.view(N, C, -1)
-        bias_in = x.mean(-1, keepdim=True)
-        weight_in = x.std(-1, keepdim=True)
+        B, C_in, H, W = x.shape
 
-        out = (x - bias_in) / (weight_in + self.eps) * self.weight + self.bias
-        return out.view(N, C, H, W)
+        if self.mod:
+            assert self.style is not None
+            modulation = self.style_to_mod(self.style).add_(1)
+            weight = self.weight[None] * modulation[:, None, :, None, None]
 
-    def __repr__(self):
-        return self.__class__.__name__ + '(' + str(self.num_features) + ')'
+            if self.demod:
+                weight = weight / torch.rsqrt((weight ** 2).sum(dim=(2, 3, 4), keepdim=True) + self.eps)
+
+            weight = weight.reshape(-1, *weight.shape[2:])
+            x = x.reshape(1, -1, H, W)
+
+            y = F.conv2d(x, weight * self.scale, stride=self.stride, padding=self.padding, groups=B)
+            y = y.view(B, -1, *y.shape[2:])
+
+        else:
+            weight = self.weight
+            if self.demod:
+                weight = weight / torch.rsqrt((weight ** 2).sum(dim=(1, 2, 3), keepdim=True) + self.eps)
+
+            weight = weight
+            y = F.conv2d(x, self.weight * self.scale, stride=self.stride, padding=self.padding)
+
+        y = y.add_(self.bias[None, :, None, None]) if self.bias is not None else y
+        y = y.add_(self.noise_weight[None, :, None, None] * torch.randn_like(y[:, :1])) if self.noise_weight is not None else y
+
+        return y
+
+class Linear(nn.Module):
+    def __init__(self, in_dim, out_dim, scale=1, bias=True):
+        super().__init__()
+
+        self.weight = nn.Parameter(torch.randn(out_dim, in_dim) / math.sqrt(in_dim))
+        self.bias = nn.Parameter(torch.zeros(out_dim)) if bias else None
+
+        self.scale = scale
+    
+    def forward(self, x):
+        return F.linear(x, self.weight * self.scale, bias=self.bias)
+
+class PixelNorm(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, input):
+        return input * torch.rsqrt(torch.mean(input ** 2, dim=1, keepdim=True) + 1e-8)
 
 def tile_like(x, target):
     # make x is able to concat with target at dim 1.
