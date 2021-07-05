@@ -33,7 +33,7 @@ shutil.copy(opts.config, os.path.join(output_directory, 'config.yaml'))  # copy 
 
 # Setup model
 multi_gpus = len(opts.gpus) > 1
-os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(opts.gpus)
+# os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(opts.gpus)
 trainer = HiSD_Trainer(config, multi_gpus=multi_gpus)
 iterations = trainer.resume(checkpoint_directory, hyperparameters=config) if opts.resume else 0
 

@@ -102,7 +102,7 @@ AFHQ_training
 
 You can Run
 ```
-python proprecessors/custom.py --imgs $your_training_set --target_path datasets/custom.txt
+python preprocessors/custom.py --imgs $your_training_set --target_path datasets/custom.txt
 ```
 For other datasets, please code the preprocessor by yourself.
 
