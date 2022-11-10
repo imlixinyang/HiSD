@@ -20,8 +20,6 @@ All tranlsations are producted be a unified HiSD model and trained end-to-end.
 
 **[2021.3.11]: High-resolution (256x256) config and checkpoint released.**
 
-**I will release a checkpoint of six tags (Bangs, Glasses, Hair color, Smile, Beard and Age) later.**
-
 ## Easy Use (for Both Jupyter Notebook and Python Script)
 
 Download the pretrained checkpoint in [Baidu Drive](https://pan.baidu.com/s/1QfZ4CzXH7A7MA0MSqN1ssg) (Password:wgdx) or [Google Drive](https://drive.google.com/file/d/1KDrNWLejpo02fcalUOrAJOl1hGoccBKl/view?usp=sharing). Then put it into the root of this repo.
